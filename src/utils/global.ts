@@ -1,5 +1,5 @@
 import axios from "axios"
-import type { AuthUser, User } from "./types";
+import type { AuthUser } from "./types";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 export const API_URL = 'http://localhost:3000'

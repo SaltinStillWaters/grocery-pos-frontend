@@ -10,4 +10,5 @@ export interface User {
     name: string,
     roles: Role[],
     isActive: boolean,
+    password: string,
 }
