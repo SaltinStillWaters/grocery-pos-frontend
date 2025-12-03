@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { API_URL, type Role, type User, useCurrentUser } from "../utils";
 import axios from "axios";
-import { RolesDisplay, RolesEdit } from "./RolesDisplay";
+import { RolesDisplay, RolesEdit } from "./sub-components/RolesDisplay";
+import { EditableCell } from "./sub-components/EditableCell";
 
 export default function Users() {
   const user = useCurrentUser();
@@ -30,19 +31,16 @@ export default function Users() {
   const [changes, setChanges] = useState<Record<string, Partial<User>>>({});
 
   function handleChange(
-    user_id: string, value: any, property: "name" | "roles" | "isActive" | "password"
+    user_id: string, value: any, property: keyof User
     ) {
       setChanges((prev) => {
         const userChanges = { ...prev[user_id], [property]: value };
-
-        if (value === '' || value === null) {
+        if (value === '' || value === null)
             delete userChanges[property];
-        }
 
         const newChanges = { ...prev, [user_id]: userChanges };
-        if (Object.keys(userChanges).length === 0) {
+        if (Object.keys(userChanges).length === 0)
             delete newChanges[user_id];
-        }
 
         return newChanges;
     });
@@ -79,24 +77,12 @@ export default function Users() {
             {users.map((u) => (
               <tr key={u._id}>
                 <td onClick={() => setEditingCell({ userId: u._id, property: 'name' })}>
-                    {
-                        editingCell?.userId === u._id && editingCell.property === 'name' ?
-                        (
-                            <input
-                                type="text"
-                                defaultValue={changes[u._id]?.['name'] ?? u.name}
-                                autoFocus
-                                onBlur={() => setEditingCell(null)}
-                                onChange={e => handleChange(u._id, e.target.value, 'name')}
-                                onKeyDown={e => {
-                                    if (e.key === 'Enter') {
-                                        setEditingCell(null);
-                                    }
-                                }}
-                            />
-                        ) :
-                        ( changes[u._id]?.['name'] ?? u.name )
-                    }
+                    <EditableCell 
+                        value={changes[u._id]?.['name'] ?? u.name}
+                        editing={editingCell?.userId === u._id && editingCell.property === 'name'}
+                        onChange={e => handleChange(u._id, e, 'name')}
+                        onEnd={() => setEditingCell(null)}
+                    />
                 </td>
                 <td>
                     {
@@ -127,24 +113,13 @@ export default function Users() {
                   />
                 </td>
                 <td onClick={() => setEditingCell({ userId: u._id, property: 'password' })}>
-                    {
-                        editingCell?.userId === u._id && editingCell.property === 'password' ?
-                        (
-                            <input
-                                type="password"
-                                defaultValue={changes[u._id]?.['password'] ?? ''}
-                                autoFocus
-                                onBlur={() => setEditingCell(null)}
-                                onChange={e => handleChange(u._id, e.target.value, 'password')}
-                                onKeyDown={e => {
-                                    if (e.key === 'Enter') {
-                                        setEditingCell(null);
-                                    }
-                                }}
-                            />
-                        ) :
-                        ( changes[u._id]?.['password'] ? '****' : '-' )
-                    }
+                    <EditableCell 
+                        type="password"
+                        value={changes[u._id]?.['password'] ?? ''}
+                        editing={editingCell?.userId === u._id && editingCell.property === 'password'}
+                        onChange={e => handleChange(u._id, e, 'password')}
+                        onEnd={() => setEditingCell(null)}
+                    />
                 </td>
               </tr>
             ))}
