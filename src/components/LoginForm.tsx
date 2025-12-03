@@ -1,9 +1,11 @@
 import axios from "axios"
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getUser } from "../utils";
+import { getUser, useCurrentUser } from "../utils";
 
 export default function LoginForm() {
+    useCurrentUser(true);
+
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [show, setShow] = useState(false);
@@ -29,11 +31,6 @@ export default function LoginForm() {
         }
     }
 
-    useEffect(() => {
-        (async() => {
-            await getUser(navigate, true);
-        })();
-    }, [navigate]);
 
     return (
     <>

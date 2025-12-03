@@ -1,6 +1,13 @@
 export type Role = 'guest' | 'clerk' | 'owner' | 'unauthenticated';
 
-export interface User {
+export interface AuthUser {
     username: string,
     roles: Role[]
+}
+
+export interface User {
+    _id: string,
+    name: string,
+    roles: Role[],
+    isActive: boolean,
 }

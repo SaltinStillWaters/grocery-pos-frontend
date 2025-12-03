@@ -1,20 +1,37 @@
-import { useEffect, useState } from "react";
-import { getUser } from "../utils";
+import { useCurrentUser } from "../utils";
 import { useNavigate } from "react-router-dom";
-import type { User } from "../utils";
 
 export default function Dashboard() {
+    const user = useCurrentUser();
     const navigate = useNavigate();
-    const [user, setUser] = useState<(User | undefined) | null>(null);
 
-    useEffect(() => {
-        (async() => {
-            setUser(await getUser(navigate));
-        })();
-    }, [navigate]);
+    const buttons = [
+        { label: 'Users', path: '/users' },
+        { label: 'Inventory', path: '/inventory' },
+        { label: 'Restock', path: '/restocks' },
+        { label: 'Adjust', path: '/adjustments' },
+        { label: 'Cashier', path: '/sell' },
+    ];
 
-    if (!user) return <h1>Loading...</h1>;
-
-    return <h1>Hello, {user.username}</h1>;
+    if (!user)
+        return <p>Loading dashboard...</p>;
+    
+    return (
+    <>
+    <h1>
+        Welcome, {user?.username}!
+    </h1>
+    {
+        buttons.map(({label, path}) => (
+            <button 
+                key={path}
+                onClick={() => navigate(path)}
+            >
+                {label}
+            </button>
+        ))    
+    }    
+    </>
+    )
 }
 

@@ -1,28 +1,39 @@
 import axios from "axios"
-import type { User } from "./types";
+import type { AuthUser, User } from "./types";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 export const API_URL = 'http://localhost:3000'
 
 export async function getUser(
     navigate: (path: string) => void,
     isLoginPage: boolean = false
-): Promise<User | undefined> {
+): Promise<AuthUser | undefined> {
     try {
         const res = await axios.get(
             `${API_URL}/users/profile`,
             { withCredentials: true }
         );
-        console.log('AUTHENTICATED', res.data.data);
 
-        if (isLoginPage) {
+        if (isLoginPage)
             navigate('/dashboard');
-        }
 
         return res.data.data;
     } catch (err) {
-        console.log('NOT AUTHENTICATED', {err});
-
-        if (!isLoginPage) {
+        if (!isLoginPage)
             navigate('/login');
-        }   
     }
+}
+
+export function useCurrentUser(isLoginPage: boolean = false) {
+    const navigate = useNavigate();
+    const [user, setUser] = useState<AuthUser | null>(null);
+
+    useEffect(() => {
+        (async () => {
+            const u = await getUser(navigate, isLoginPage);
+            setUser(u ?? null);
+        })();
+    }, [navigate]);
+
+    return user;
 }
