@@ -3,6 +3,7 @@ import { API_URL, type Role, type User, useCurrentUser } from "../utils";
 import axios from "axios";
 import { RolesDisplay, RolesEdit } from "./sub-components/RolesDisplay";
 import { EditableCell } from "./sub-components/EditableCell";
+import Header from "./Header";
 
 export default function Users() {
   const user = useCurrentUser();
@@ -31,10 +32,21 @@ export default function Users() {
 
   const [changes, setChanges] = useState<Record<string, Partial<User>>>({});
 
-  function handleChange(user_id: string, value: any, property: keyof User) {
+  function handleChange(
+    user_id: string,
+    originalUser: User,
+    value: any,
+    property: keyof User
+  ) {
     setChanges((prev) => {
       const userChanges = { ...prev[user_id], [property]: value };
-      if (value === "" || value === null) delete userChanges[property];
+      if (
+        value === "" ||
+        value === null ||
+        originalUser?.[property] === value
+      ) {
+        delete userChanges[property];
+      }
 
       const newChanges = { ...prev, [user_id]: userChanges };
       if (Object.keys(userChanges).length === 0) delete newChanges[user_id];
@@ -43,7 +55,10 @@ export default function Users() {
     });
   }
 
-  async function handleSave(changes: Record<string, Partial<User>>) {
+  const [errors, setErrors] = useState<Record<string, Partial<User>>>({});
+
+  async function handleSave(e: React.FormEvent, changes: Record<string, Partial<User>>) {
+    e.preventDefault();
     setLoading(true);
     const updates = Object.entries(changes).map(([_id, update]) => ({
       _id,
@@ -58,16 +73,28 @@ export default function Users() {
       );
       await fetchUsers();
       console.log({ res });
-    } catch (err) {
+    } catch (err: any) {
       console.log({ err });
+      err.response.data.message
+        .map(({msg, _id, property}: any) => {
+          setErrors(prev => ({
+              ...prev, 
+              [_id]: {
+                ...(prev[_id] || {}),
+                [property]: msg
+              }
+          }));
+        });
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleCancel() {
+  async function handleCancel(e: React.FormEvent) {
+    e.preventDefault();
     setLoading(true);
     setChanges({});
+    setErrors({});
     fetchUsers();
   }
 
@@ -79,97 +106,127 @@ export default function Users() {
   if (loading) return <p>Loading users...</p>;
 
   return (
-    <div className="container mt-4">
-      <h2>Users</h2>
-      <button
-        onClick={() => handleSave(changes)}
-        disabled={loading || !Object.keys(changes).length}
-      >
-        Save
-      </button>
-      <button
-        onClick={handleCancel}
-        disabled={loading || !Object.keys(changes).length}
-      >
-        Cancel
-      </button>
+    <div className="container mt-5">
+      <Header />
+
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 className="fw-bold">Users</h2>
+        <div className="d-flex gap-2">
+          <button
+            className="btn btn-primary px-4"
+            onClick={(e) => handleSave(e, changes)}
+            disabled={loading || !Object.keys(changes).length}
+          >
+            Save
+          </button>
+          <button
+            className="btn btn-outline-secondary px-4"
+            onClick={(e) => handleCancel(e)}
+            disabled={loading || !Object.keys(changes).length}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+
       {users && users.length > 0 ? (
-        <table className="table table-striped table-bordered">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Roles</th>
-              <th>Active?</th>
-              <th>New Password</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u) => (
-              <tr key={u._id}>
-                <td
-                  onClick={() =>
-                    setEditingCell({ userId: u._id, property: "name" })
-                  }
-                >
-                  <EditableCell
-                    value={changes[u._id]?.["name"] ?? u.name}
-                    editing={
-                      editingCell?.userId === u._id &&
-                      editingCell.property === "name"
-                    }
-                    onChange={(e) => handleChange(u._id, e, "name")}
-                    onEnd={() => setEditingCell(null)}
-                  />
-                </td>
-                <td>
-                  {editingCell?.userId === u._id &&
-                  editingCell.property === "roles" ? (
-                    <RolesEdit
-                      roles={changes[u._id]?.["roles"] ?? u.roles}
-                      allRoles={["guest", "clerk", "owner", "unauthenticated"]}
-                      onChange={(roles) => handleChange(u._id, roles, "roles")}
-                      onBlur={() => setEditingCell(null)}
-                    />
-                  ) : (
-                    <RolesDisplay
-                      roles={changes[u._id]?.["roles"] ?? u.roles}
-                      onClick={() =>
-                        setEditingCell({ userId: u._id, property: "roles" })
-                      }
-                    />
-                  )}
-                </td>
-                <td>
-                  <input
-                    type="checkbox"
-                    defaultChecked={u.isActive}
-                    onChange={(e) =>
-                      handleChange(u._id, e.target.checked, "isActive")
-                    }
-                  />
-                </td>
-                <td
-                  onClick={() =>
-                    setEditingCell({ userId: u._id, property: "password" })
-                  }
-                >
-                  <EditableCell
-                    type="password"
-                    value={changes[u._id]?.["password"] ?? ""}
-                    editing={
-                      editingCell?.userId === u._id &&
-                      editingCell.property === "password"
-                    }
-                    onChange={(e) => handleChange(u._id, e, "password")}
-                    onEnd={() => setEditingCell(null)}
-                  />
-                </td>
+        <div className="table-responsive shadow-sm rounded overflow-hidden">
+          <table
+            className="table table-hover mb-0"
+            style={{ tableLayout: "fixed", width: "100%" }}
+          >
+            <thead className="table-light">
+              <tr>
+                <th>Name</th>
+                <th>Roles</th>
+                <th>Active?</th>
+                <th>New Password</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {users.map((u) => {
+                const userChanges = changes[u._id] || {};
+                return (
+                  <tr key={u._id} className="align-middle">
+                    <td
+                      onClick={() =>
+                        setEditingCell({ userId: u._id, property: "name" })
+                      }
+                    >
+                      <EditableCell
+                        value={userChanges.name ?? u.name}
+                        isEditing={
+                          editingCell?.userId === u._id &&
+                          editingCell.property === "name"
+                        }
+                        onChange={(e) => handleChange(u._id, u, e, "name")}
+                        onEnd={() => setEditingCell(null)}
+                        error={errors[u._id]?.["name"]}
+                      />
+                    </td>
+
+                    <td>
+                      {editingCell?.userId === u._id &&
+                      editingCell.property === "roles" ? (
+                        <RolesEdit
+                          roles={userChanges.roles ?? u.roles}
+                          allRoles={[
+                            "guest",
+                            "clerk",
+                            "owner",
+                            "unauthenticated",
+                          ]}
+                          onChange={(roles) =>
+                            handleChange(u._id, u, roles, "roles")
+                          }
+                          onBlur={() => setEditingCell(null)}
+                        />
+                      ) : (
+                        <RolesDisplay
+                          roles={userChanges.roles ?? u.roles}
+                          onClick={() =>
+                            setEditingCell({ userId: u._id, property: "roles" })
+                          }
+                        />
+                      )}
+                    </td>
+
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={userChanges.isActive ?? u.isActive}
+                        onChange={(e) =>
+                          handleChange(u._id, u, e.target.checked, "isActive")
+                        }
+                        className="form-check-input"
+                      />
+                    </td>
+
+                    <td
+                      onClick={() =>
+                        setEditingCell({ userId: u._id, property: "password" })
+                      }
+                    >
+                      <EditableCell
+                        type="password"
+                        value={userChanges.password ?? ""}
+                        isEditing={
+                          editingCell?.userId === u._id &&
+                          editingCell.property === "password"
+                        }
+                        onChange={(e) => handleChange(u._id, u, e, "password")}
+                        onEnd={() => setEditingCell(null)}
+                        error={errors[u._id]?.["password"]}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       ) : (
-        <p>No users found.</p>
+        <p className="text-muted mt-3">No users found.</p>
       )}
     </div>
   );

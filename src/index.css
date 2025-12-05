@@ -1,0 +1,84 @@
+.card.hover-highlight {
+  transition: all 0.2s ease-in-out; /* smooth transition */
+  cursor: pointer;
+}
+
+.card.hover-highlight:hover {
+  transform: translateY(-4px); /* lift up */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); /* stronger shadow */
+  background-color: rgba(0, 123, 255, 0.05); /* subtle blue tint */
+}
+/* Hover strip */
+.header-trigger {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 20px; /* slightly taller trigger for easier hover */
+  z-index: 9998;
+}
+
+/* Slide wrapper */
+.header-wrapper {
+  position: fixed;
+  top: -100px; /* hide taller header */
+  left: 0;
+  width: 100%;
+  transition: top 0.35s ease;
+  z-index: 9999;
+}
+
+/* Show header on hover */
+.header-trigger:hover + .header-wrapper,
+.header-wrapper:hover {
+  top: 0;
+}
+
+/* Header styling */
+.slide-header {
+  backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.88);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  border-radius: 0 0 16px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 60px; /* taller padding */
+  min-height: 80px; /* enforce taller header */
+}
+
+/* Center nav container */
+.nav-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 16px; /* more spacing for taller header */
+}
+
+/* Nav buttons */
+.nav-btn {
+  background: rgba(0, 123, 255, 0.1);
+  border: none;
+  color: #007bff;
+  padding: 10px 18px; /* larger buttons */
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.nav-btn:hover {
+  background: rgba(0, 123, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.nav-btn.logout {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+.nav-btn.logout:hover {
+  background: rgba(220, 53, 69, 0.2);
+}

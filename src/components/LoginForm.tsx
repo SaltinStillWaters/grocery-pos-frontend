@@ -24,7 +24,7 @@ export default function LoginForm() {
       );
 
       console.log({ res });
-      navigate("/dashboard");
+      navigate('/dashboard')
     } catch (err: any) {
       if (err.response) {
         setError(err.response.data.message);
