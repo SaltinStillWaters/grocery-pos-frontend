@@ -52,18 +52,22 @@ export default function Inventory() {
   } | null>(null);
 
   async function handleSave(e: React.FormEvent, idKey: string) {
+    e.preventDefault();
     setLoading(true);
+
     const payload: Dto = {
       updates: Object.entries(changes).map(([_id, changes]) => ({
         product: _id,
         update: { ...changes },
       })),
     };
+
     try {
       const res = await axios.patch(`${API_URL}/product`, payload, {
         withCredentials: true,
       });
       setChanges({});
+      setErrors({});
     } catch (err) {
       handleError(err, payload, idKey);
     } finally {

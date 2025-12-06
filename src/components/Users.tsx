@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
-import { API_URL, type Role, type User, useChangeTracker, useCurrentUser } from "../utils";
+import {
+  API_URL,
+  type Dto,
+  type Role,
+  type User,
+  useChangeTracker,
+  useCurrentUser,
+  useErrors,
+} from "../utils";
 import axios from "axios";
 import { RolesDisplay, RolesEdit } from "./sub-components/RolesDisplay";
 import { EditableCell } from "./sub-components/EditableCell";
@@ -29,38 +37,34 @@ export default function Users() {
   }, []);
 
   const { changes, setChanges, handleChange } = useChangeTracker<User>();
-  const [errors, setErrors] = useState<Record<string, Partial<User>>>({});
+  const { errors, setErrors, handleError } = useErrors<User>();
 
-  async function handleSave(e: React.FormEvent, changes: Record<string, Partial<User>>) {
+  async function handleSave(
+    e: React.FormEvent,
+    changes: Record<string, Partial<User>>,
+    idKey: string
+  ) {
     e.preventDefault();
     setLoading(true);
-    const updates = Object.entries(changes).map(([_id, update]) => ({
-      _id,
-      update,
-    }));
+
+    const payload: Dto = {
+      updates: Object.entries(changes).map(([user, update]) => ({
+        user,
+        update,
+      })),
+    };
 
     try {
-      const res = await axios.patch(
-        `${API_URL}/users`,
-        { updates },
-        { withCredentials: true }
-      );
+      const res = await axios.patch(`${API_URL}/users`, payload, {
+        withCredentials: true,
+      });
       await fetchUsers();
       setChanges({});
-      console.log({ res });
     } catch (err: any) {
-      console.log({ err });
-      err.response.data.message
-        .map(({msg, _id, property}: any) => {
-          setErrors(prev => ({
-              ...prev, 
-              [_id]: {
-                ...(prev[_id] || {}),
-                [property]: msg
-              }
-          }));
-        });
+      setErrors({});
+      handleError(err, payload, idKey);
     } finally {
+      fetchUsers();
       setLoading(false);
     }
   }
@@ -89,7 +93,7 @@ export default function Users() {
         <div className="d-flex gap-2">
           <button
             className="btn btn-primary px-4"
-            onClick={(e) => handleSave(e, changes)}
+            onClick={(e) => handleSave(e, changes, 'user')}
             disabled={loading || !Object.keys(changes).length}
           >
             Save
@@ -134,7 +138,7 @@ export default function Users() {
                           editingCell?.userId === u._id &&
                           editingCell.property === "name"
                         }
-                        onChange={(e) => handleChange(u._id, u, {'name': e})}
+                        onChange={(e) => handleChange(u._id, u, { name: e })}
                         onEnd={() => setEditingCell(null)}
                         error={errors[u._id]?.["name"]}
                       />
@@ -152,7 +156,7 @@ export default function Users() {
                             "unauthenticated",
                           ]}
                           onChange={(e) =>
-                            handleChange(u._id, u, {"roles": e as Role[]})
+                            handleChange(u._id, u, { roles: e as Role[] })
                           }
                           onBlur={() => setEditingCell(null)}
                         />
@@ -171,7 +175,7 @@ export default function Users() {
                         type="checkbox"
                         checked={userChanges.isActive ?? u.isActive}
                         onChange={(e) =>
-                          handleChange(u._id, u, {'isActive': e.target.checked})
+                          handleChange(u._id, u, { isActive: e.target.checked })
                         }
                         className="form-check-input"
                       />
@@ -189,7 +193,9 @@ export default function Users() {
                           editingCell?.userId === u._id &&
                           editingCell.property === "password"
                         }
-                        onChange={(e) => handleChange(u._id, u, {'password': e})}
+                        onChange={(e) =>
+                          handleChange(u._id, u, { password: e })
+                        }
                         onEnd={() => setEditingCell(null)}
                         error={errors[u._id]?.["password"]}
                       />
