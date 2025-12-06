@@ -1,3 +1,6 @@
 TO DO:
-- fix logout and auto reroute if authed or not
-- style /users
+- finish Inventory: Saving (Try to save)
+- Make input auto capitalize
+
+API:
+- patch http://localhost:3000/product/ does not return badreq on bad req

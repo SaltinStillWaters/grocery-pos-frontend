@@ -1,17 +1,18 @@
 import { useEffect, useRef } from "react";
+import './editableCell.css';
 
-interface EditableCellProps<T> {
+interface EditableCellProps<T, K extends keyof T> {
   type?: "text" | "password";
-  value: T;
+  value: T[K];
   isEditing: boolean;
-  onChange: (v: T) => void;
+  onChange: (v: T[K]) => void;
   onEnd: () => void;
   error?: string;
 }
 
-export function EditableCell<T>(props: EditableCellProps<T>) {
+export function EditableCell<T, K extends keyof T>(props: EditableCellProps<T, K>) {
   const { type = "text", value, isEditing, onChange, onEnd, error } = props;
-
+  
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -39,7 +40,7 @@ export function EditableCell<T>(props: EditableCellProps<T>) {
             type={type}
             value={String(value) as any}
             onBlur={onEnd}
-            onChange={(e) => onChange(e.target.value as any)}
+            onChange={(e) => onChange(e.target.value as T[K])}
             onKeyDown={(e) => {
               if (e.key === "Enter") onEnd();
             }}

@@ -12,3 +12,11 @@ export interface User {
     isActive: boolean,
     password: string,
 }
+
+export interface Product {
+    _id: string,
+    EAN: string,
+    name: string,
+    price: number,
+    stock: number,
+}

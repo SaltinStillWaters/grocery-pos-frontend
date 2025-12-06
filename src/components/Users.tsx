@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
-import { API_URL, type Role, type User, useCurrentUser } from "../utils";
+import { API_URL, type Role, type User, useChangeTracker, useCurrentUser } from "../utils";
 import axios from "axios";
 import { RolesDisplay, RolesEdit } from "./sub-components/RolesDisplay";
 import { EditableCell } from "./sub-components/EditableCell";
 import Header from "./Header";
 
 export default function Users() {
-  const user = useCurrentUser();
-
   const [users, setUsers] = useState<User[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -30,31 +28,7 @@ export default function Users() {
     fetchUsers();
   }, []);
 
-  const [changes, setChanges] = useState<Record<string, Partial<User>>>({});
-
-  function handleChange(
-    user_id: string,
-    originalUser: User,
-    value: any,
-    property: keyof User
-  ) {
-    setChanges((prev) => {
-      const userChanges = { ...prev[user_id], [property]: value };
-      if (
-        value === "" ||
-        value === null ||
-        originalUser?.[property] === value
-      ) {
-        delete userChanges[property];
-      }
-
-      const newChanges = { ...prev, [user_id]: userChanges };
-      if (Object.keys(userChanges).length === 0) delete newChanges[user_id];
-
-      return newChanges;
-    });
-  }
-
+  const { changes, setChanges, handleChange } = useChangeTracker<User>();
   const [errors, setErrors] = useState<Record<string, Partial<User>>>({});
 
   async function handleSave(e: React.FormEvent, changes: Record<string, Partial<User>>) {
@@ -72,6 +46,7 @@ export default function Users() {
         { withCredentials: true }
       );
       await fetchUsers();
+      setChanges({});
       console.log({ res });
     } catch (err: any) {
       console.log({ err });
@@ -95,7 +70,7 @@ export default function Users() {
     setLoading(true);
     setChanges({});
     setErrors({});
-    fetchUsers();
+    await fetchUsers();
   }
 
   const [editingCell, setEditingCell] = useState<{
@@ -153,13 +128,13 @@ export default function Users() {
                         setEditingCell({ userId: u._id, property: "name" })
                       }
                     >
-                      <EditableCell
+                      <EditableCell<User, "name">
                         value={userChanges.name ?? u.name}
                         isEditing={
                           editingCell?.userId === u._id &&
                           editingCell.property === "name"
                         }
-                        onChange={(e) => handleChange(u._id, u, e, "name")}
+                        onChange={(e) => handleChange(u._id, u, {'name': e})}
                         onEnd={() => setEditingCell(null)}
                         error={errors[u._id]?.["name"]}
                       />
@@ -176,8 +151,8 @@ export default function Users() {
                             "owner",
                             "unauthenticated",
                           ]}
-                          onChange={(roles) =>
-                            handleChange(u._id, u, roles, "roles")
+                          onChange={(e) =>
+                            handleChange(u._id, u, {"roles": e as Role[]})
                           }
                           onBlur={() => setEditingCell(null)}
                         />
@@ -196,7 +171,7 @@ export default function Users() {
                         type="checkbox"
                         checked={userChanges.isActive ?? u.isActive}
                         onChange={(e) =>
-                          handleChange(u._id, u, e.target.checked, "isActive")
+                          handleChange(u._id, u, {'isActive': e.target.checked})
                         }
                         className="form-check-input"
                       />
@@ -207,14 +182,14 @@ export default function Users() {
                         setEditingCell({ userId: u._id, property: "password" })
                       }
                     >
-                      <EditableCell
+                      <EditableCell<User, "password">
                         type="password"
                         value={userChanges.password ?? ""}
                         isEditing={
                           editingCell?.userId === u._id &&
                           editingCell.property === "password"
                         }
-                        onChange={(e) => handleChange(u._id, u, e, "password")}
+                        onChange={(e) => handleChange(u._id, u, {'password': e})}
                         onEnd={() => setEditingCell(null)}
                         error={errors[u._id]?.["password"]}
                       />
