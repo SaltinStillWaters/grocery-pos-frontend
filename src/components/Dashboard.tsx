@@ -9,7 +9,7 @@ export default function Dashboard() {
   const buttons = [
     { label: "Users", path: "/users" },
     { label: "Inventory", path: "/inventory/products" },
-    { label: "Restock", path: "/restocks" },
+    { label: "Restock", path: "/inventory/restocks" },
     { label: "Adjust", path: "/adjustments" },
     { label: "Cashier", path: "/sell" },
   ];

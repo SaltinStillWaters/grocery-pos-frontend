@@ -1,8 +1,6 @@
 import React, {
   useEffect,
   useState,
-  type Dispatch,
-  type SetStateAction,
 } from "react";
 import { API_URL, useChangeTracker, useErrors, type Dto, type Product } from "../utils";
 import axios from "axios";
@@ -63,7 +61,7 @@ export default function Inventory() {
     };
 
     try {
-      const res = await axios.patch(`${API_URL}/product`, payload, {
+      await axios.patch(`${API_URL}/product`, payload, {
         withCredentials: true,
       });
       setChanges({});
@@ -85,9 +83,6 @@ export default function Inventory() {
     setLoading(false);
   }
 
-  useEffect(() => {
-    console.log({ errors });
-  }, [errors]);
   if (loading) return <p>Loading users...</p>;
 
   return (

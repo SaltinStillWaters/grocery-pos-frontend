@@ -11,7 +11,7 @@ export default function Header({ buttons }: { buttons?: NavButton[] }) {
   const defaultButtons: NavButton[] = [
     { label: "Users", path: "/users" },
     { label: "Inventory", path: "/inventory/products" },
-    { label: "Restock", path: "/restocks" },
+    { label: "Restock", path: "/inventory/restocks" },
     { label: "Adjust", path: "/adjustments" },
     { label: "Cashier", path: "/sell" },
   ];

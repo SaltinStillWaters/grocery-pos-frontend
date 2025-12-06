@@ -1,0 +1,4 @@
+.clickable-row:hover td {
+  color: #0d6efd !important; /* Bootstrap primary blue */
+  transition: background 0.15s, color 0.15s;
+}

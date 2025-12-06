@@ -20,3 +20,16 @@ export interface Product {
     price: number,
     stock: number,
 }
+
+export interface RestockDetails {
+    product: string,
+    quantity: number,
+    unitCost: number
+}
+export interface Restock {
+    _id: string,
+    restockedBy: string,
+    description: string,
+    totalCost: number,
+    date: Date
+}
